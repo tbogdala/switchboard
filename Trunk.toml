@@ -16,5 +16,5 @@ ignore = [
     "README.md",
     "LICENSE",
     "apikeys.md",
-    "github_pages",
+    "docs",
 ]

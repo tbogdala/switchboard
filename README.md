@@ -67,7 +67,7 @@ At this point, browse to `http://localhost:8080` on your browser to see the app.
 
 ## Publishing to Github Pages
 
-This project keeps a stash of `./dist` in `./github_pages` for the public facing version
+This project keeps a stash of `./dist` in `./docs` for the public facing version
 of this project that's hosted on github. It is not generated automatically through CI
 but updated manually.
 
