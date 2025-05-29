@@ -1,0 +1,7 @@
+/target
+/dist
+.vscode/
+tailwind.css
+apikeys.md
+.git-hash
+.DS_Store

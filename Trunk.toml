@@ -1,0 +1,20 @@
+[[hooks]]
+stage = "pre_build"
+command = "sh"
+command_arguments = ["-c", "if [ ! -e tailwind.css ]; then touch tailwind.css; fi"]
+
+[[hooks]]
+stage = "build"
+command = "sh"
+command_arguments = ["-c", "if command -v tailwindcss; then tailwindcss -i ./tailwind-import.css -o tailwind.css; else echo Warning: tailwindcss executable not found; fi"]
+
+[watch]
+ignore = [
+    ".git",
+    "target",
+    ".gitignore",
+    "README.md",
+    "LICENSE",
+    "apikeys.md",
+    "github_pages",
+]

@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-site-background:      var(--color-blue-100);
+  --color-site-background-dark: var(--color-slate-900);
+
+  --color-chat-container:       var(--color-white);     
+  --color-chat-container-dark:  var(--color-gray-800);
+
+  --color-msgbubble-user:       var(--color-blue-300);
+  --color-msgbubble-user-dark:  var(--color-cyan-700);
+
+  --color-msgbubble-ai:         var(--color-gray-300);
+  --color-msgbubble-ai-dark:    var(--color-slate-700);
+
+  --color-msgbubble-ai-thinking:         var(--color-gray-200);
+  --color-msgbubble-ai-thinking-dark:    var(--color-slate-800);
+
+  --color-msgbubble-markdown-pre:         var(--color-gray-200);
+  --color-msgbubble-markdown-pre-dark:    var(--color-slate-800);
+
+  --color-primary-text:         var(--color-black);
+  --color-primary-text-dark:    var(--color-slate-200);
+
+  --color-secondary-text:       var(--color-gray-600);
+  --color-secondary-text-dark:  var(--color-gray-400);
+
+  --color-action-text:          var(--color-indigo-950);
+  --color-action-text-dark:     var(--color-slate-300);
+  --color-action-bubble:        var(--color-slate-300);
+  --color-action-bubble-border: var(--color-slate-400);
+  --color-action-bubble-dark:        var(--color-slate-500);
+  --color-action-bubble-border-dark: var(--color-slate-400);
+
+  --color-send-button:          var(--color-msgbubble-user);
+  --color-send-button-dark:     var( --color-msgbubble-user-dark);
+
+} 
+
+/* Chat interface components */
+.chat-messages::-webkit-scrollbar {
+  display: none;
+}
+
+.chat-messages {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.chat-container {
+  @apply flex flex-col h-full items-center justify-center p-5 md:p-8 bg-site-background dark:bg-site-background-dark;
+}
+
+.chat-window {
+  @apply w-full max-w-5xl rounded-lg shadow-md p-4 md:p-6 flex flex-col h-full max-h-full overflow-y-auto bg-chat-container dark:bg-chat-container-dark;
+}
+
+.chat-messages {
+  @apply flex-grow mb-4 overflow-auto h-0 min-h-0;
+}
+
+/* Button Bar components */
+.text-logo {
+  @apply text-xl font-bold bg-gradient-to-r from-blue-700 via-cyan-600 to-purple-700 dark:from-blue-400 dark:via-cyan-300 dark:to-purple-400 bg-clip-text text-transparent;
+}
+
+.config-button {
+  @apply border h-10 m-1 p-2 rounded-lg text-lg focus:border-2 border-msgbubble-user dark:border-msgbubble-user-dark bg-site-background dark:bg-site-background-dark text-primary-text dark:text-primary-text-dark;
+}
+
+.button-bar {
+  @apply flex items-center mb-4 w-full;
+}
+
+.button-group {
+  @apply flex gap-1 ml-auto;
+}
+
+/* Message components */
+.message-container-user {
+  @apply flex justify-end mb-4;
+}
+
+.message-container-ai {
+  @apply flex justify-start mb-4;
+}
+
+.message-bubble-user {
+  @apply relative p-3 rounded-lg rounded-br-none max-w-9/10 whitespace-pre-wrap bg-msgbubble-user dark:bg-msgbubble-user-dark text-primary-text dark:text-primary-text-dark;
+}
+
+.message-bubble-ai {
+  @apply relative p-3 rounded-lg rounded-bl-none max-w-9/10 whitespace-pre-wrap bg-msgbubble-ai dark:bg-msgbubble-ai-dark text-primary-text dark:text-primary-text-dark;
+}
+
+.message-content {
+  @apply mb-2; 
+}
+
+.message-content-editable {
+    @apply w-800 max-w-9/10 bg-transparent p-2 m-2 border-none resize-none;
+}
+
+.message-actions {
+  @apply flex flex-col items-end;
+}
+
+.action-badge {
+  @apply absolute bottom-0 right-5 w-4 h-4 rounded-full border-2
+    bg-action-bubble border-action-bubble-border
+    dark:bg-action-bubble-dark dark:border-action-bubble-border-dark
+    transform translate-x-1/2 translate-y-1/2
+    cursor-pointer hover:scale-125 transition-transform
+    text-action-text dark:text-action-text-dark
+    flex items-center justify-center;
+}
+
+.actions-row {
+  @apply flex gap-2 justify-end w-full;
+}
+
+.action-button {
+  @apply px-1 py-1 text-xs
+    cursor-pointer text-action-text dark:text-action-text-dark;
+}
+
+.think-block-header {
+  @apply p-4 cursor-pointer font-medium text-sm flex items-center rounded-t-lg bg-msgbubble-ai-thinking dark:bg-msgbubble-ai-thinking-dark;
+}
+
+.think-block-content {
+  @apply p-4 rounded-b-lg text-sm
+    bg-msgbubble-ai-thinking dark:bg-msgbubble-ai-thinking-dark;
+}
+
+.think-toggle {
+  @apply text-xs;
+}
+
+.progress-spinner {
+  @apply animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 dark:border-msgbubble-ai border-msgbubble-ai-dark
+}
+
+/* Input components */
+.input-container {
+  @apply flex justify-center space-x-4 items-center;
+}
+
+.send-button {
+  @apply font-medium py-2 px-4 rounded-lg transition-colors h-12 bg-send-button dark:bg-send-button-dark text-primary-text dark:text-primary-text-dark;
+}
+.send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.message-input {
+  @apply border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 flex-1 text-primary-text dark:text-primary-text-dark border-msgbubble-user dark:border-msgbubble-user-dark;
+}
+
+/* Config container and input styles */
+.config-container {
+  @apply w-full max-w-full mx-auto p-4 mb-4 border rounded-lg shadow-md bg-site-background dark:bg-site-background-dark border-msgbubble-ai dark:border-msgbubble-ai-dark
+    text-primary-text dark:text-primary-text-dark;
+}
+
+.config-textinput {
+  @apply w-full p-3 border rounded-lg focus:outline-none focus:ring-2 mt-1 mb-4 border-msgbubble-user dark:border-msgbubble-user-dark
+     focus:ring-msgbubble-user dark:focus:ring-msgbubble-user-dark
+     text-secondary-text dark:text-secondary-text-dark;
+}
+
+.config-label {
+  @apply block text-lg font-medium text-primary-text dark:text-primary-text-dark mb-1;
+}
+
+.config-group {
+  @apply flex flex-col w-full;
+}
+
+/* Save Slot components */
+.save-slot-badge {
+  @apply p-2 mr-6 rounded-full flex items-center justify-center text-4xl font-bold
+  bg-msgbubble-ai dark:bg-msgbubble-ai-dark
+  text-primary-text dark:text-primary-text-dark
+}
+
+.save-slot-container {
+  @apply mt-auto grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3
+}
+
+.save-slot-button {
+  @apply rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm
+    bg-msgbubble-ai dark:bg-msgbubble-ai-dark hover:bg-msgbubble-user dark:hover:bg-msgbubble-user-dark;
+}
+
+.save-slot-header {
+  @apply mb-2 text-lg font-semibold text-primary-text dark:text-primary-text-dark;
+}
+
+.save-slot-header-secondary {
+  @apply text-sm text-secondary-text dark:text-secondary-text-dark
+}
+
+.git-hash {
+  @apply ml-4 text-xs px-1.5 py-0.5 rounded font-mono text-secondary-text dark:text-secondary-text-dark;
+}
+
+/* global rules */
+pre {
+  @apply  p-4 rounded-lg overflow-x-auto bg-msgbubble-markdown-pre dark:bg-msgbubble-markdown-pre-dark 
+  text-primary-text dark:text-primary-text-dark;
+}
+
