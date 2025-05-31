@@ -3,9 +3,18 @@
 Aiming to be a lightweight, modern looking and easy to deploy chat interface to large language models
 that can be used as-is and easily self-hosted, themed and modified as needed.
 
+Switchboard is a web 'app' that is shipped as a single web page (HTML, JS, WASM and CSS) and is written
+with Rust, targetting WASM, for high performance. Other than communicating to the OpenAI-compatible API
+you set in the configuration, the app makes no other connections besides pulling the [lineicons](https://lineicons.com/) font.
+
 Note: Everything is under heavy development right now; Consider any data as disposable as log compatability isn't guaranteed yet.
 
-[Try the Live Demo Site!](https://tbogdala.github.io/switchboard/)
+
+## Demo Site
+
+[Try The Live Demo Site!](https://tbogdala.github.io/switchboard/) 
+
+*(Requires an [OpenRouter AI key](https://openrouter.ai/) or your own OpenAI compatible endpoint and key)*
 
 
 ## Features

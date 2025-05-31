@@ -2,7 +2,7 @@ use reqwasm::http::Request;
 use serde_json::{Value, json};
 use sycamore::prelude::*;
 
-use crate::models::{chatlog::Message, config::ApiEndpointConfig, system_message::SystemMessage};
+use crate::models::{chatlog::{parse_think_block, Message}, config::ApiEndpointConfig, system_message::SystemMessage};
 
 const TOTAL_API_LIMIT: u32 = 16000;
 const RESPONSE_RESERVATION: u32 = 2000;
@@ -58,7 +58,7 @@ where
     for m in msgs.iter().rev() {
         // we need to remove the thinking content when sending in messages as this
         // is currently considered best practice.
-        let content = match m.parse_think_block() {
+        let content = match parse_think_block(m.message.clone()) {
             Some((main_content, _)) => main_content,
             None => m.message.clone(),
         };
@@ -118,7 +118,7 @@ where
     if api_config.repetition_penalty.is_some() {
         request_body["repetition_penalty"] = json!(api_config.get_repetition_penalty());
     }
-    console_log!("DEBUG: request body: {}", request_body);
+    //console_log!("DEBUG: request body: {}", request_body);
 
     // make a POST request to the API
     wasm_bindgen_futures::spawn_local(async move {

@@ -21,26 +21,24 @@ pub struct Message {
     pub id: u32,
 }
 
-impl Message {
-    // extracts think block from message, returning a tuple that represents
-    // (main_content, thinking_content) as strings. If the Message doesn't have
-    // a detected 'thought' block at the start of the message, `None` will be returned.
-    pub fn parse_think_block(&self) -> Option<(String, String)> {
-        let message = self.message.trim();
-        let think_start = "<think>";
-        let think_end = "</think>";
+// extracts think block from message, returning a tuple that represents
+// (main_content, thinking_content) as strings. If the message doesn't have
+// a detected 'thought' block at the start of the message, `None` will be returned.
+pub fn parse_think_block(message: String) -> Option<(String, String)> {
+    let message = message.trim();
+    let think_start = "<think>";
+    let think_end = "</think>";
 
-        if message.starts_with(think_start) {
-            if let Some(end) = message.find(think_end) {
-                let think_content = &message[0..end + think_end.len()];
-                let main_content = message[end + think_end.len()..].trim().to_string();
-                Some((main_content, think_content.to_string()))
-            } else {
-                None
-            }
+    if message.starts_with(think_start) {
+        if let Some(end) = message.find(think_end) {
+            let think_content = &message[0..end + think_end.len()];
+            let main_content = message[end + think_end.len()..].trim().to_string();
+            Some((main_content, think_content.to_string()))
         } else {
             None
         }
+    } else {
+        None
     }
 }
 

@@ -11,7 +11,6 @@ command_arguments = ["-c", "if command -v tailwindcss; then tailwindcss -i ./tai
 [watch]
 ignore = [
     ".git",
-    "target",
     ".gitignore",
     "README.md",
     "LICENSE",

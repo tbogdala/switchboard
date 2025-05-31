@@ -1,4 +1,4 @@
-use crate::models::chatlog::{Chatlog, Message};
+use crate::models::chatlog::{parse_think_block, Chatlog, Message};
 use sycamore::prelude::*;
 use web_sys::KeyboardEvent;
 
@@ -53,8 +53,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
 
     // signal for tracking if think block is expanded, unexpanded by default
     let show_think_block = create_signal(false);
-    let maybe_msg_has_thoughts = msg.parse_think_block();
-
+    
     view! {
     div (class = if !msg.ai_generated {
         "message-container-user"
@@ -69,7 +68,10 @@ pub fn ChatMessageComponent(msg: Message) -> View {
             // Show text or input based on editing state
             div (class="message-content") {
                 (if !is_editing.get() {
-                    // Check for think block
+                    // Check for think block by setting up a msg clone with the edited content
+                    // from the signal
+                    let maybe_msg_has_thoughts = parse_think_block(edited_message.get_clone());
+
                     if let Some((main_content, think_content)) = maybe_msg_has_thoughts.clone() {
                         let markdown_content = ammonia::clean(&markdown::to_html(&main_content));
                         view! {
