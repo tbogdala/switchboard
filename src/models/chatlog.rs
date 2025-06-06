@@ -19,6 +19,7 @@ pub struct Message {
     pub message: String,
     pub ai_generated: bool,
     pub id: u32,
+    pub image_base64: Option<String>, // optional base64 encoded image associated with message
 }
 
 // extracts think block from message, returning a tuple that represents
@@ -114,13 +115,15 @@ impl Chatlog {
 
     // adds a new `Message` to the chatlog and generates a new id for it.
     // `ai_gen` should be set to `false` if this message was human generated.
-    pub fn add_msg(&mut self, new_msg: String, ai_gen: bool) {
+    // `image_base64` is an optional base64 encoded string for an image.
+    pub fn add_msg(&mut self, new_msg: String, ai_gen: bool, image_base64: Option<String>) {
         self.messages.update(|msgs| {
             let new_id = self.get_next_id();
             msgs.push(Message {
                 id: new_id,
                 ai_generated: ai_gen,
                 message: new_msg,
+                image_base64,
             })
         });
     }

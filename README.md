@@ -19,12 +19,15 @@ Note: Everything is under heavy development right now; Consider any data as disp
 
 ## Features
 
-* Clean and Simple: Setup your API settings and you're good to go!
+* **Clean and Simple**: Setup your API settings and you're good to go!
 
-* Themable: Clone this repo and change [tailwind-import.css](./tailwind-import.css) to have the webpage look
+* **Multimodal support for images**: Paste an image in from the clipboard to the message and it will be
+  sent to the AI with the text.
+
+* **Themable**: Clone this repo and change [tailwind-import.css](./tailwind-import.css) to have the webpage look
   how you want it to look. Or fork and update the modular components for deeper customization.
 
-* Supports OpenAI-compatbile APIs such as [llama.cpp's server](https://github.com/ggml-org/llama.cpp), which when
+* **Supports OpenAI-compatbile APIs** such as [llama.cpp's server](https://github.com/ggml-org/llama.cpp), which when
   combined with [llama-swap](https://github.com/mostlygeek/llama-swap), will allow multiple models to be served.
   It also works with popular cloud API providers such as [openrouter](https://openrouter.ai/).
 
@@ -73,6 +76,11 @@ At this point, browse to `http://localhost:8080` on your browser to see the app.
 * Currently, errors are under reported and if something is not acting right, bring up the
   Web Developer Tools (or equivalent) and look at the 'console' tab for error mesasages.
 
+* For image support, the current implementation only sends the image data when it's the
+  last message in the chatlog so that it doesn't use up token processing with each subsequent request.
+  Feedback can be provided on this, if there's a more preffered way to handle images
+  in the chatlog; please open a ticket or start a discussion. Image size is also not
+  factored into the token budget estimation (unsure if this has negative effects in practice).
 
 ## Publishing to Github Pages
 
@@ -94,9 +102,10 @@ just a single endpoint and a simple system message for prompt generation. Chatlo
 be basic and just include delete, regenerate and edit capabilities. This will provide a minimalistic
 starting point for others to use as just a general chat interface.
 
-Aftwards, that version will get branched and run as the 'nano' version of the project.
-That's when multiple characters, multiple API endpoints and possibly advanced integrations
-with something like an MCP server. Things that are more complicated.
+Afterwards, that version will get branched and named the 'nano' version of the project.
+The main branch will then work on more advanced features such as multiple characters, 
+multiple API endpoints and possibly advanced integrations with something like an MCP server. 
+Things that are more complicated.
 
 
 ## License

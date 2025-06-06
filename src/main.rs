@@ -30,7 +30,7 @@ fn generate_response() {
     api_endpoint::send_chat_completion_request(msgs, move |response| {
         // console_log!("main::on_user_send response received: {:?}", response);
         is_response_pending.signal().set(false);
-        active_chatlog.update(|log| log.add_msg(response.text, true));
+        active_chatlog.update(|log| log.add_msg(response.text, true, None));
     });
 }
 

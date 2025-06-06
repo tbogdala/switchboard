@@ -45,7 +45,8 @@ where
     } else {
         api_config.get_target_context_size()
     };
-    console_log!("Working token budget: {}", working_token_budget);
+    let max_working_token_budget = working_token_budget;
+    console_log!("Working token budget: {}", max_working_token_budget);
     let mut messages: Vec<_> = Vec::new();
 
     // get the system message in context
@@ -55,6 +56,7 @@ where
     working_token_budget -= estimate_tokens(system_message_trimmed);
 
     // construct the message history list
+    let mut first_message = true;
     for m in msgs.iter().rev() {
         // we need to remove the thinking content when sending in messages as this
         // is currently considered best practice.
@@ -63,11 +65,40 @@ where
             None => m.message.clone(),
         };
         let msg_token_est = estimate_tokens(&content);
-        if msg_token_est <= working_token_budget {
-            messages.push(json!({
-                "role": if m.ai_generated { "assistant" } else { "user" },
-                "content": content,
-            }));
+        if msg_token_est <= working_token_budget {            
+            let mut added_msg_already = false;
+
+            // only when processing the first message do we look for image data.
+            // if the image data is present, then we have to encode our JSON
+            // request object differently to pair the message with the image.
+            if first_message {
+                if let Some(image_base64) = &m.image_base64 {
+                    messages.push(json!({
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": content,
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": image_base64,
+                                },
+                            }
+                        ]
+                    }));
+                    added_msg_already = true;
+                }
+                first_message = false;
+            }
+
+            if !added_msg_already {
+                messages.push(json!({
+                    "role": if m.ai_generated { "assistant" } else { "user" },
+                    "content": content,
+                }));
+            }
             // console_log!("Adding {} tokens ({} remaining) of message: {}", msg_token_est, working_token_budget, content);
             working_token_budget -= msg_token_est;
         } else {
@@ -92,7 +123,7 @@ where
     // for m in messages.iter() {
     //     console_log!("Message: {:?}", m);
     // }
-    console_log!("A total of {} messages sent; The system message is approx. {} tokens.", messages.len(), estimate_tokens(&system_message_trimmed));
+    console_log!("A total of {} messages sent; The system message is approx. {} tokens; Toal estimated: {}.", messages.len(), estimate_tokens(&system_message_trimmed), max_working_token_budget - working_token_budget);
 
     // build the JSON body of the request and optionally add in advance parameters
     // if specified by the user in the API configuration.

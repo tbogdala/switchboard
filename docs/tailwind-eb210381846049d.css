@@ -1,4 +1,4 @@
-/*! tailwindcss v4.1.7 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.1.8 | MIT License | https://tailwindcss.com */
 @layer properties;
 @layer theme, base, components, utilities;
 @layer theme {
@@ -259,6 +259,9 @@
   }
   .cursor-pointer {
     cursor: pointer;
+  }
+  .flex-col {
+    flex-direction: column;
   }
   .items-center {
     align-items: center;
@@ -550,6 +553,19 @@
     color: var(--color-slate-300);
   }
 }
+.message-image {
+  margin-top: calc(var(--spacing) * 2);
+  margin-bottom: calc(var(--spacing) * 2);
+  max-height: calc(var(--spacing) * 52);
+  max-width: calc(var(--spacing) * 52);
+  border-radius: 0.25rem;
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-black);
+  &:where(.dark, .dark *) {
+    border-color: var(--color-white);
+  }
+}
 .think-block-header {
   display: flex;
   cursor: pointer;
@@ -651,6 +667,23 @@
   &:where(.dark, .dark *) {
     color: var(--color-slate-200);
   }
+}
+.input-image-label {
+  margin-bottom: calc(var(--spacing) * 2);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  color: var(--color-black);
+  &:where(.dark, .dark *) {
+    color: var(--color-slate-200);
+  }
+}
+.input-image {
+  max-height: calc(var(--spacing) * 52);
+  max-width: calc(var(--spacing) * 52);
+  border-radius: 0.25rem;
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-black);
 }
 .config-container {
   margin-inline: auto;

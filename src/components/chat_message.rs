@@ -118,6 +118,16 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                         )
                     }
                 })
+
+                (if let Some(data_url_str) = msg.image_base64 {
+                    view! {
+                        div {
+                            img(src=data_url_str, alt="Pasted Image", class="message-image")
+                        }
+                    }
+                } else {
+                    view! { }
+                })
             }
 
             div(class="message-actions") {
