@@ -1,4 +1,4 @@
-use crate::models::chatlog::{parse_think_block, Chatlog, Message};
+use crate::models::chatlog::{Chatlog, Message, parse_think_block};
 use sycamore::prelude::*;
 use web_sys::KeyboardEvent;
 
@@ -53,7 +53,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
 
     // signal for tracking if think block is expanded, unexpanded by default
     let show_think_block = create_signal(false);
-    
+
     view! {
     div (class = if !msg.ai_generated {
         "message-container-user"

@@ -1,8 +1,8 @@
 use sycamore::{prelude::*, web::events::KeyboardEvent};
+use web_sys::ClipboardEvent;
 use web_sys::js_sys::Function;
 use web_sys::wasm_bindgen::prelude::Closure;
-use web_sys::{wasm_bindgen::JsCast, FileReader};
-use web_sys::ClipboardEvent;
+use web_sys::{FileReader, wasm_bindgen::JsCast};
 
 use crate::models::{chatlog::Chatlog, is_response_pending::IsResponsePending};
 
@@ -15,7 +15,7 @@ use crate::models::{chatlog::Chatlog, is_response_pending::IsResponsePending};
 pub fn ChatInputComponent() -> View {
     // context bool that should be set to true once a request is sent out to AI
     let is_response_pending = use_context::<IsResponsePending>();
-    
+
     // signal for the main text input control
     let input_text = create_signal(String::new());
 
@@ -77,32 +77,41 @@ pub fn ChatInputComponent() -> View {
                                 Ok(file_reader) => {
                                     let file_reader_clone = file_reader.clone();
                                     let image_data_base64_clone = image_data_base64.clone();
-                                    let handle_onload_js: Function = Closure::wrap(Box::new(move || {
-                                        match file_reader_clone.result() {
-                                            Ok(res) => {
-                                                if let Some(data_str) = res.as_string() {
-                                                    image_data_base64_clone.set(Some(data_str));
-                                                } else {
-                                                    console_log!("Failed to read image as string.");
+                                    let handle_onload_js: Function =
+                                        Closure::wrap(Box::new(move || {
+                                            match file_reader_clone.result() {
+                                                Ok(res) => {
+                                                    if let Some(data_str) = res.as_string() {
+                                                        image_data_base64_clone.set(Some(data_str));
+                                                    } else {
+                                                        console_log!(
+                                                            "Failed to read image as string."
+                                                        );
+                                                    }
                                                 }
-                                            },
-                                            Err(err) => {
-                                                console_log!("Error reading the image: {:?}", err);
+                                                Err(err) => {
+                                                    console_log!(
+                                                        "Error reading the image: {:?}",
+                                                        err
+                                                    );
+                                                }
                                             }
-                                        }
-                                    }) as Box<dyn FnMut()>).into_js_value().into();
+                                        })
+                                            as Box<dyn FnMut()>)
+                                        .into_js_value()
+                                        .into();
 
                                     file_reader.set_onload(Some(&handle_onload_js));
                                     if let Err(err) = file_reader.read_as_data_url(&file) {
                                         console_log!("Clipboard image reading failed: {:?}", err);
                                     }
-                                },
+                                }
                                 Err(err) => {
                                     console_log!("FileReader failed to start: {:?}", err);
-                                } 
+                                }
                             }
                         }
-                        
+
                         break; // only handle the first image found
                     }
                 }

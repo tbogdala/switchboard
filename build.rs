@@ -1,4 +1,4 @@
-use std::{env, process::Command, path::Path, fs};
+use std::{env, fs, path::Path, process::Command};
 
 fn main() {
     // Create a file to track the current git state

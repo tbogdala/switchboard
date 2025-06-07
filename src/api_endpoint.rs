@@ -3,7 +3,11 @@ use reqwasm::http::Request;
 use serde_json::{Value, json};
 use sycamore::prelude::*;
 
-use crate::models::{chatlog::{parse_think_block, Message}, config::ApiEndpointConfig, system_message::SystemMessage};
+use crate::models::{
+    chatlog::{Message, parse_think_block},
+    config::ApiEndpointConfig,
+    system_message::SystemMessage,
+};
 
 const TOTAL_API_LIMIT: u32 = 16000;
 const RESPONSE_RESERVATION: u32 = 2000;
@@ -66,7 +70,7 @@ where
             None => m.message.clone(),
         };
         let msg_token_est = estimate_tokens(&content);
-        if msg_token_est <= working_token_budget {            
+        if msg_token_est <= working_token_budget {
             let mut added_msg_already = false;
 
             // only when processing the first message do we look for image data.
@@ -124,7 +128,12 @@ where
     // for m in messages.iter() {
     //     console_log!("Message: {:?}", m);
     // }
-    console_log!("A total of {} messages sent; The system message is approx. {} tokens; Toal estimated: {}.", messages.len(), estimate_tokens(&system_message_trimmed), max_working_token_budget - working_token_budget);
+    console_log!(
+        "A total of {} messages sent; The system message is approx. {} tokens; Toal estimated: {}.",
+        messages.len(),
+        estimate_tokens(&system_message_trimmed),
+        max_working_token_budget - working_token_budget
+    );
 
     // build the JSON body of the request and optionally add in advance parameters
     // if specified by the user in the API configuration.
@@ -172,16 +181,52 @@ where
                         }
                         Err(e) => {
                             console_log!("Error reading response text: {}", e.to_string());
-                            on_response(Err(anyhow!("Error reading response text: {}", e.to_string())));
+                            on_response(Err(anyhow!(
+                                "Error reading response text: {}",
+                                e.to_string()
+                            )));
                         }
                     }
                 } else {
-                    console_log!("API request failed");
-                    on_response(Err(anyhow!("API request failed")));
+                    match response.text().await {
+                        Ok(error_text) => {
+                            // Try to parse the error response JSON
+                            if let Ok(error_json) =
+                                serde_json::from_str::<serde_json::Value>(&error_text)
+                            {
+                                if let Some(message) = error_json["error"]["message"].as_str() {
+                                    console_log!("API request failed: {}", message);
+                                    on_response(Err(anyhow!("API request failed: {}", message)));
+                                } else {
+                                    console_log!(
+                                        "API request failed with unexpected error format: {}",
+                                        error_text
+                                    );
+                                    on_response(Err(anyhow!("API request failed: {}", error_text)));
+                                }
+                            } else {
+                                console_log!(
+                                    "API request failed with non-JSON response: {}",
+                                    error_text
+                                );
+                                on_response(Err(anyhow!("API request failed: {}", error_text)));
+                            }
+                        }
+                        Err(e) => {
+                            console_log!(
+                                "API request failed and couldn't read error response: {}",
+                                e.to_string()
+                            );
+                            on_response(Err(anyhow!(
+                                "API request failed and couldn't read error response"
+                            )));
+                        }
+                    }
                 }
             }
             Err(e) => {
                 console_log!("Error sending request: {}", e.to_string());
+                on_response(Err(anyhow!("Error sending request: {}", e.to_string())));
             }
         }
     });

@@ -33,11 +33,10 @@ fn generate_response() {
         match maybe_response {
             Ok(response) => {
                 active_chatlog.update(|log| log.add_msg(response.text, true, None));
-            },
+            }
             Err(e) => {
                 let _ = window().alert_with_message(
-                    format!("ERROR: Failed to generate the AI's response:\n\n{}", e)
-                        .as_str(),
+                    format!("ERROR: Failed to generate the AI's response:\n\n{}", e).as_str(),
                 );
             }
         };
