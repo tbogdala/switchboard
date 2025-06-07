@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use reqwasm::http::Request;
 use serde_json::{Value, json};
 use sycamore::prelude::*;
@@ -30,7 +31,7 @@ pub struct CompletionResponse {
 /// Sends a chat request to the API with the given messages and handles the response.
 pub fn send_chat_completion_request<F>(msgs: Vec<Message>, on_response: F)
 where
-    F: FnOnce(CompletionResponse) + 'static,
+    F: FnOnce(anyhow::Result<CompletionResponse>) + 'static,
 {
     // pull the api endpoint configuration from the context
     let config_context_signal = use_context::<Signal<ApiEndpointConfig>>();
@@ -166,15 +167,17 @@ where
                     match response.text().await {
                         Ok(text) => {
                             if let Ok(response) = extract_chat_completion_response(&text) {
-                                on_response(response);
+                                on_response(Ok(response));
                             }
                         }
                         Err(e) => {
                             console_log!("Error reading response text: {}", e.to_string());
+                            on_response(Err(anyhow!("Error reading response text: {}", e.to_string())));
                         }
                     }
                 } else {
                     console_log!("API request failed");
+                    on_response(Err(anyhow!("API request failed")));
                 }
             }
             Err(e) => {

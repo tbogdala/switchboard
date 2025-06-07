@@ -27,10 +27,20 @@ fn generate_response() {
     let active_chatlog = use_context::<Signal<Chatlog>>();
     let log = active_chatlog.get_clone_untracked();
     let msgs = log.messages.get_clone_untracked();
-    api_endpoint::send_chat_completion_request(msgs, move |response| {
+    api_endpoint::send_chat_completion_request(msgs, move |maybe_response| {
         // console_log!("main::on_user_send response received: {:?}", response);
         is_response_pending.signal().set(false);
-        active_chatlog.update(|log| log.add_msg(response.text, true, None));
+        match maybe_response {
+            Ok(response) => {
+                active_chatlog.update(|log| log.add_msg(response.text, true, None));
+            },
+            Err(e) => {
+                let _ = window().alert_with_message(
+                    format!("ERROR: Failed to generate the AI's response:\n\n{}", e)
+                        .as_str(),
+                );
+            }
+        };
     });
 }
 
