@@ -32,20 +32,20 @@ pub fn ButtonBarComponent() -> View {
     view! {
         div (class="button-bar") {
             div {
-                div (class="text-logo") { "Switchboard!" }
+                div (class="text-logo") { a(href="https://github.com/tbogdala/switchboard/") {"Switchboard!" } }
                 div (class="git-hash") { (git_info_string) }
             }
 
             div (class="button-group") {
-                button(on:click = toggle_saving_chatlog, class="config-button") {
+                button(on:click = toggle_saving_chatlog, class="config-button", title="Save and load chatlogs") {
                     i(class="lni lni-box-archive-1") {}
                 }
 
-                button(on:click = toggle_dark_mode, class="config-button") {
+                button(on:click = toggle_dark_mode, class="config-button", title="Toggle dark mode") {
                     i(class="lni lni-bulb-4") {}
                 }
 
-                button(on:click = toggle_edit_config, class="config-button") {
+                button(on:click = toggle_edit_config, class="config-button", title="Edit configuration settins") {
                     i(class="lni lni-gears-3") {}
                 }
             }

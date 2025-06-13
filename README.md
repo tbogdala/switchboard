@@ -12,7 +12,7 @@ Note: Everything is under heavy development right now; Consider any data as disp
 
 ## Demo Site
 
-[Try The Live Demo Site!](https://tbogdala.github.io/switchboard/) 
+[Try The Live Demo Site!](https://animal-machine.com/switchboard/) 
 
 *(Requires an [OpenRouter AI key](https://openrouter.ai/) or your own OpenAI compatible endpoint and key)*
 
@@ -66,6 +66,14 @@ trunk serve --release
 ```
 At this point, browse to `http://localhost:8080` on your browser to see the app.
 
+When deploying to a website that is going to host it someplace other than the root,
+you can generate the website with the following trunk command, where the website files are
+located in `/switchboard`:
+
+```bash
+trunk serve --release --public-url /switchboard/
+```
+
 
 ## Notes on Usage
 
@@ -81,18 +89,6 @@ At this point, browse to `http://localhost:8080` on your browser to see the app.
   Feedback can be provided on this, if there's a more preffered way to handle images
   in the chatlog; please open a ticket or start a discussion. Image size is also not
   factored into the token budget estimation (unsure if this has negative effects in practice).
-
-## Publishing to Github Pages
-
-This project keeps a stash of `./dist` in `./docs` for the public facing version
-of this project that's hosted on github. It is not generated automatically through CI
-but updated manually.
-
-The build is made with an extra flag to `trunk` to adjust for the URL github uses:
-
-```bash
-trunk serve --release --public-url /switchboard/
-```
 
 
 ## Roadmap

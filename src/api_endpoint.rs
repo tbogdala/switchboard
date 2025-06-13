@@ -175,6 +175,7 @@ where
                 if response.ok() {
                     match response.text().await {
                         Ok(text) => {
+                            // console_log!("DEBUG: Response text: {}", &text);
                             if let Ok(response) = extract_chat_completion_response(&text) {
                                 on_response(Ok(response));
                             }
@@ -246,6 +247,12 @@ fn extract_chat_completion_response(json_response: &str) -> Result<CompletionRes
         .and_then(|choice| choice.get("message"))
         .and_then(|message| message.get("content"))
         .and_then(|content| content.as_str());
+    let reasoning = parsed_value
+        .get("choices")
+        .and_then(|choices| choices.get(0))
+        .and_then(|choice| choice.get("message"))
+        .and_then(|message| message.get("reasoning"))
+        .and_then(|reasoning| reasoning.as_str());
 
     // Pull the timings out from the response if they're present.
     let completion_tokens = parsed_value
@@ -265,15 +272,26 @@ fn extract_chat_completion_response(json_response: &str) -> Result<CompletionRes
         .and_then(|usage| usage.get("prompt_ms"))
         .and_then(|tokens| tokens.as_f64());
 
-    // Handle the result and return
-    match content {
-        Some(text) => Ok(CompletionResponse {
-            text: text.trim().to_string(),
-            completion_tokens,
-            predicted_ms,
-            prompt_tokens,
-            prompt_ms,
-        }),
-        None => Err("Could not find 'choices[0].message.content' in the JSON".to_string()),
+    // if reasoning tokens is given, include those in the output.
+    if let Some(text) = content {
+        if let Some(reason_header) = reasoning {
+            Ok(CompletionResponse {
+                text: format!("<think>{}</think>\n{}", reason_header.trim(), text.trim()),
+                completion_tokens,
+                predicted_ms,
+                prompt_tokens,
+                prompt_ms,
+            })
+        } else {
+            Ok(CompletionResponse {
+                text: text.trim().to_string(),
+                completion_tokens,
+                predicted_ms,
+                prompt_tokens,
+                prompt_ms,
+            })
+        }
+    } else {
+        Err("Could not find 'choices[0].message.content' in the JSON".to_string())
     }
 }

@@ -15,5 +15,4 @@ ignore = [
     "README.md",
     "LICENSE",
     "apikeys.md",
-    "docs",
 ]
