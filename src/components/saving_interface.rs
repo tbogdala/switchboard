@@ -148,7 +148,7 @@ pub fn SaveSlotComponent(index: u16) -> View {
 
 #[component(inline_props)]
 pub fn SavingInterface() -> View {
-    const NUM_SAVE_SLOTS: u16 = 6;
+    const NUM_SAVE_SLOTS: u16 = 10;
 
     // this is bound to the textarea for JSON importing
     let imported_json = create_signal(String::new());
