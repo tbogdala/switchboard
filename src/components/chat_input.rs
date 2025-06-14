@@ -25,6 +25,11 @@ pub fn ChatInputComponent() -> View {
 
     // shared send logic to send a new message request
     let send_message = move || {
+        // skip sending messages if we already have one in the oven
+        if is_response_pending.signal().get() {
+            return;
+        }
+
         let input_str = input_text.get_clone_untracked();
         let active_chatlog = use_context::<Signal<Chatlog>>();
         if !input_str.trim().is_empty() {
