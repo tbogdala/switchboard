@@ -17,6 +17,9 @@ pub mod storage;
 // keys used in local storage
 const LSKEY_API_CONFIG: &str = "api_config";
 const LSKEY_SYSMSG: &str = "system_message";
+const LSKEY_CURRENTLOG: &str = "current_chatlog";
+const LSKEY_DARK_MODE: &str = "dark_mode";
+
 
 // This function is used as a callback for the Chatlog for when an AI response is
 // requested.
@@ -27,12 +30,27 @@ fn generate_response() {
     let active_chatlog = use_context::<Signal<Chatlog>>();
     let log = active_chatlog.get_clone_untracked();
     let msgs = log.messages.get_clone_untracked();
+    
+    let config_context_signal = use_context::<Signal<ApiEndpointConfig>>();
+    let system_message_context = use_context::<SystemMessage>();
+
     api_endpoint::send_chat_completion_request(msgs, move |maybe_response| {
         // console_log!("main::on_user_send response received: {:?}", response);
         is_response_pending.signal().set(false);
         match maybe_response {
             Ok(response) => {
                 active_chatlog.update(|log| log.add_msg(response.text, true, None));
+
+                // save the active chatlog into a separate local storage key so that
+                // current progress is always saved.
+                let chatlog_json = active_chatlog.get_clone_untracked().to_json(config_context_signal.get_clone(), system_message_context.signal().get_clone());
+                if let Ok(json) = chatlog_json {
+                    if let Err(e) = storage::save_to_local_storage::<String>(LSKEY_CURRENTLOG, &json) {
+                        console_log!("ERROR: attempt to save_to_local_storage for current log failed: {:?}", e);
+                    }
+                } else {
+                    console_log!("Failed to serialize the current chatlog to JSON.");
+                }
             }
             Err(e) => {
                 let _ = window().alert_with_message(
@@ -47,12 +65,18 @@ fn generate_response() {
 #[component]
 fn MainComponent() -> View {
     // create a signal for the chatlog and put it in the context
-    let active_chatlog = create_signal(Chatlog::new(generate_response));
+    let chatlog_json_maybe = storage::load_from_local_storage::<String>(LSKEY_CURRENTLOG);
+    let active_chatlog = match chatlog_json_maybe {
+        Some(json) => match Chatlog::from_json(&json, generate_response) {
+            Ok((log, _, _)) => create_signal(log),
+            Err(_) => create_signal(Chatlog::new(generate_response)),
+        },
+        None => create_signal(Chatlog::new(generate_response)),
+    };
     provide_context(active_chatlog);
 
     // setup the light and dark mode switching signal. we pull the initial value
     // from local storage and setup an effect to send it to loca storage on change.
-    const LSKEY_DARK_MODE: &str = "dark_mode";
     let dark_mode_init =
         storage::load_from_local_storage::<bool>(LSKEY_DARK_MODE).unwrap_or_else(|| true);
     let dark_mode = DarkMode::new(dark_mode_init);
