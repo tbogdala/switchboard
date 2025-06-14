@@ -15,7 +15,7 @@ serde_derive = "1.0.219"
 serde_json = "1.0.140"
 sycamore = { version = "0.9.1", features = ["futures", "serde"] }
 wasm-bindgen-futures = "0.4.50"
-web-sys = { version = "0.3.77", features = ["Storage", "ClipboardEvent", "File", "FileReader", "DataTransfer", "DataTransferItem", "DataTransferItemList"] }
+web-sys = { version = "0.3.77", features = ["Storage", "Navigator", "ClipboardEvent", "File", "FileReader", "DataTransfer", "DataTransferItem", "DataTransferItemList"] }
 
 [profile.release]
 # Do not perform backtrace for panic on release builds.

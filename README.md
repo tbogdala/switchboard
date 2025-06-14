@@ -77,6 +77,12 @@ trunk serve --release --public-url /switchboard/
 
 ## Notes on Usage
 
+* The demo site and other places you host this site will likely have a problem if only 
+  part of the connection is HTTPS. If you host this project on an HTTPS webserver, the
+  OpenAI-compatible endpoints you connect to will *also* have to be HTTPS or else it 
+  will get blocked as a security violation. When running the project locally using Trunk,
+  this behavior doesn't happen.
+
 * Firefox, and it's derivatives, may have a small local storage pool by default. You can
   browse to `about:config`, search for the `dom.storage.default_quota` parameter and setting
   it to `102400` for 100MB of local storage.

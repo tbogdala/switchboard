@@ -4,6 +4,7 @@ use web_sys::js_sys::Function;
 use web_sys::wasm_bindgen::prelude::Closure;
 use web_sys::{FileReader, wasm_bindgen::JsCast};
 
+use crate::components::detect_mobile_device;
 use crate::models::{chatlog::Chatlog, is_response_pending::IsResponsePending};
 
 /// A component that renders a chat input field with a send button.
@@ -50,11 +51,13 @@ pub fn ChatInputComponent() -> View {
         send_message();
     };
 
-    // keydown handler for Enter key (&& !Shift)
+    // keydown handler for Enter key (&& !Shift) on non-mobile devices.
     let on_keypress = move |event: KeyboardEvent| {
-        if event.key() == "Enter" && !event.shift_key() {
-            event.prevent_default();
-            send_message();
+        if !detect_mobile_device() {
+            if event.key() == "Enter" && !event.shift_key() {
+                event.prevent_default();
+                send_message();
+            }
         }
     };
 

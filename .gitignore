@@ -5,3 +5,4 @@ tailwind.css
 apikeys.md
 .git-hash
 .DS_Store
+build_n_push.sh
