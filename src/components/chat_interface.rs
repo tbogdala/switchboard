@@ -49,7 +49,7 @@ pub fn ChatInterface() -> View {
         div (class = get_chat_container_classes()) {
             ButtonBarComponent()
 
-            div (class = "chat-window") {
+            div (class = "chat-window flex flex-col h-[calc(100vh-200px)] md:h-full") {
                 div (class = "chat-messages", r#ref=node_ref) {
                     ChatlogComponent()
 
