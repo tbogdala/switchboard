@@ -25,6 +25,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
         if !new_msg.trim().is_empty() {
             let mut active_chatlog = use_context::<Signal<Chatlog>>().get_clone_untracked();
             active_chatlog.update_msg(msg.id, new_msg, edited_image_base64.get_clone());
+            show_actions.set(false);
         }
     };
 
@@ -70,6 +71,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
 
         let log = active_chatlog.get_clone();
         log.trigger_response_generation();
+        show_actions.set(false);
     };
 
     // signal for tracking if think block is expanded, unexpanded by default
@@ -147,7 +149,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                         }
                     } else {
                         view! {
-                            div(class="flex flex-col items-left") {
+                            div(class="flex flex-col items-start") {
                                 div(class="relative") {
                                     img(src=data_url_str, alt="Image for Message", class="message-image")
                                     button(
