@@ -16,11 +16,32 @@ pub fn ChatMessageComponent(msg: Message) -> View {
 
     let is_editing = create_signal(false);
     let edited_message = create_signal(msg.message.clone());
+    let edited_image_base64 = create_signal(msg.image_base64.clone());
+
     let handle_edit_done = move || {
+        is_editing.set(false);
+
         let new_msg = edited_message.get_clone_untracked();
         if !new_msg.trim().is_empty() {
             let mut active_chatlog = use_context::<Signal<Chatlog>>().get_clone_untracked();
-            active_chatlog.update_msg(msg.id, new_msg);
+            active_chatlog.update_msg(msg.id, new_msg, edited_image_base64.get_clone());
+        }
+    };
+
+    let handle_remove_image = move || {
+        edited_image_base64.set(None);
+        let mut active_chatlog = use_context::<Signal<Chatlog>>().get_clone_untracked();
+        active_chatlog.update_msg(msg.id, edited_message.get_clone(), None);
+    };
+
+    let handle_purge_msgs = move || {
+        let confirmed =
+            window().confirm_with_message("Are you sure you want to delete this message AND all older messages also?");
+        if let Ok(is_ok) = confirmed {
+            if is_ok {
+                let mut active_chatlog = use_context::<Signal<Chatlog>>().get_clone_untracked();
+                active_chatlog.purge_messages(msg.id);
+            }
         }
     };
 
@@ -105,13 +126,11 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                             class = "message-content-editable block",
                             bind:value = edited_message,
                             on:blur = move |_| {
-                                is_editing.set(false);
                                 handle_edit_done();
                             },
                             on:keydown = move |e:KeyboardEvent| {
                                 if e.key() == "Enter" && !e.shift_key() {
                                     e.prevent_default();
-                                    is_editing.set(false);
                                     handle_edit_done();
                                 }
                             },
@@ -119,11 +138,29 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                     }
                 })
 
-                (if let Some(data_url_str) = msg.image_base64 {
-                    view! {
-                        div {
-                            img(src=data_url_str, alt="Pasted Image", class="message-image")
+                (if let Some(data_url_str) = edited_image_base64.get_clone() {
+                    if !is_editing.get() {
+                        view! {
+                            div {
+                                img(src=data_url_str, alt="Image for Message", class="message-image")
+                            }
                         }
+                    } else {
+                        view! {
+                            div(class="flex flex-col items-left") {
+                                div(class="relative") {
+                                    img(src=data_url_str, alt="Image for Message", class="message-image")
+                                    button(
+                                        on:click=move |_| {
+                                            handle_remove_image();
+                                        },
+                                        class="input-image-remove-button"
+                                    ) {
+                                        "X"
+                                    }
+                                }
+                            }
+                         }
                     }
                 } else {
                     view! { }
@@ -142,6 +179,12 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                         "hidden"
                     }
                     ) {
+                        button(
+                            class="action-button",
+                            on:click=move |_| {
+                                handle_purge_msgs();
+                            }
+                        ) { "Purge" }
                         button(
                             class="action-button",
                             on:click=move |_| {

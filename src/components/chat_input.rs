@@ -66,6 +66,11 @@ pub fn ChatInputComponent() -> View {
         }
     };
 
+    // 'removes' the image from the message being drafted by clearing the base64 encoded string.
+    let handle_remove_image = move |_| {
+        image_data_base64.set(None);
+    };
+
     // intercept clipboard paste events to check and see if an image is being pasted into
     // the message textarea. If so, we update our signal with the base64 encoded data.
     let on_paste = move |event: web_sys::Event| {
@@ -133,7 +138,15 @@ pub fn ChatInputComponent() -> View {
                 view! {
                     div(class="flex flex-col items-center") {
                         h3(class="input-image-label") { "Attached Image:" }
-                        img(src=data_url_str, alt="Pasted Image", class="input-image")
+                        div(class="relative") {
+                            img(src=data_url_str, alt="Pasted Image", class="input-image")
+                            button(
+                                on:click=handle_remove_image,
+                                class="input-image-remove-button"
+                            ) {
+                                "X"
+                            }
+                        }
                     }
                 }
             } else {

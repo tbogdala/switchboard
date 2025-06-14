@@ -128,6 +128,15 @@ impl Chatlog {
         });
     }
 
+    // removes the `Message` with the matching id *and* all `Message` objects that come after it.
+    pub fn purge_messages(&mut self, id: u32) {
+        self.messages.update(|msgs| {
+            if let Some(index) = msgs.iter().position(|msg| msg.id == id) {
+                msgs.truncate(index);
+            }
+        });
+    }
+
     // removes the `Message` with the matching id.
     pub fn remove_message(&mut self, id: u32) {
         self.messages.update(|msgs| {
@@ -146,11 +155,12 @@ impl Chatlog {
         });
     }
 
-    // updates the message text for a `Message` with matching id.
-    pub fn update_msg(&mut self, id: u32, new_msg: String) {
+    // updates the message text and image data for a `Message` with matching id.
+    pub fn update_msg(&mut self, id: u32, new_msg: String, image_base64: Option<String>) {
         self.messages.update(|msgs| {
             if let Some(msg) = msgs.iter_mut().find(|msg| msg.id == id) {
                 msg.message = new_msg;
+                msg.image_base64 = image_base64;
             }
         });
     }
