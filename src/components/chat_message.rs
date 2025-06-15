@@ -1,4 +1,4 @@
-use crate::models::chatlog::{Chatlog, Message, parse_think_block};
+use crate::{components::detect_mobile_device, models::chatlog::{parse_think_block, Chatlog, Message}};
 use sycamore::prelude::*;
 use web_sys::KeyboardEvent;
 
@@ -131,9 +131,11 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                                 handle_edit_done();
                             },
                             on:keydown = move |e:KeyboardEvent| {
-                                if e.key() == "Enter" && !e.shift_key() {
-                                    e.prevent_default();
-                                    handle_edit_done();
+                                if !detect_mobile_device() {
+                                    if e.key() == "Enter" && !e.shift_key() {
+                                        e.prevent_default();
+                                        handle_edit_done();
+                                    }
                                 }
                             },
                         )
