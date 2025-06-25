@@ -166,6 +166,8 @@ where
         let result = Request::post(&format!("{}/chat/completions", api_config.endpoint))
             .header("Content-Type", "application/json")
             .header("Authorization", &format!("Bearer {}", api_config.api_key))
+            .header("HTTP-Referer", "https://github.com/tbogdala/switchboard")
+            .header("X-Title", "Switchboard!")
             .body(request_body.to_string())
             .send()
             .await;
