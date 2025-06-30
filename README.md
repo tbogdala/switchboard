@@ -9,6 +9,8 @@ you set in the configuration, the app makes no other connections.
 
 Note: Everything is under heavy development right now; Consider any data as disposable as log compatability isn't guaranteed yet.
 
+![Screenshot of Switchboard in action](assets/screenshot_main.png)
+
 
 ## Demo Site
 
