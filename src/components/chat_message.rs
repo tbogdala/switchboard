@@ -1,4 +1,7 @@
-use crate::{components::detect_mobile_device, models::chatlog::{parse_think_block, Chatlog, Message}};
+use crate::{
+    components::detect_mobile_device,
+    models::chatlog::{Chatlog, Message, parse_think_block},
+};
 use sycamore::prelude::*;
 use web_sys::KeyboardEvent;
 
@@ -36,8 +39,9 @@ pub fn ChatMessageComponent(msg: Message) -> View {
     };
 
     let handle_purge_msgs = move || {
-        let confirmed =
-            window().confirm_with_message("Are you sure you want to delete this message AND all older messages also?");
+        let confirmed = window().confirm_with_message(
+            "Are you sure you want to delete this message AND all older messages also?",
+        );
         if let Ok(is_ok) = confirmed {
             if is_ok {
                 let mut active_chatlog = use_context::<Signal<Chatlog>>().get_clone_untracked();

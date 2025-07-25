@@ -42,7 +42,7 @@ pub fn ButtonBarComponent() -> View {
             button_fill_color.set(if dark_mode_signal.get() {
                 "var(--color-primary-text-dark)".to_string()
             } else {
-               "var(--color-primary-text)".to_string()
+                "var(--color-primary-text)".to_string()
             });
         }
     });

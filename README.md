@@ -9,6 +9,9 @@ you set in the configuration, the app makes no other connections.
 
 Note: Everything is under heavy development right now; Consider any data as disposable as log compatability isn't guaranteed yet.
 
+WARNING: CHATLOG BREAKS ARE INCOMING FOR THE NEXT FEW COMMITS. 
+(WILL STABILIZE AND UPDATE DEMO SITE ONCE I FEEL BETTER ABOUT THE UI FOR THE LOGS)
+
 ![Screenshot of Switchboard in action](assets/screenshot_main.png)
 
 

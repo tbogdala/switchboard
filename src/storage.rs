@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sycamore::prelude::*;
+use uuid::Uuid;
 use web_sys::wasm_bindgen::JsValue;
 
 // helper function to save to local storage
@@ -46,4 +47,9 @@ pub fn delete_from_local_storage(key: &str) -> Result<(), JsValue> {
     Err(JsValue::from_str(
         "Failed to attempt to remove a key from local_storage",
     ))
+}
+
+/// Generates a new GUID for a saved chatlog
+pub fn generate_chatlog_id() -> String {
+    Uuid::new_v4().to_string()
 }

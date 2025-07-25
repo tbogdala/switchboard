@@ -9,6 +9,8 @@ use models::{
 };
 use sycamore::prelude::*;
 
+use crate::models::chatlog::ChatLogMetadata;
+
 pub mod api_endpoint;
 pub mod components;
 pub mod models;
@@ -19,7 +21,7 @@ const LSKEY_API_CONFIG: &str = "api_config";
 const LSKEY_SYSMSG: &str = "system_message";
 const LSKEY_CURRENTLOG: &str = "current_chatlog";
 const LSKEY_DARK_MODE: &str = "dark_mode";
-
+const LSKEY_CHATLOG_METADATA: &str = "chatlog_metadata";
 
 // This function is used as a callback for the Chatlog for when an AI response is
 // requested.
@@ -30,7 +32,7 @@ fn generate_response() {
     let active_chatlog = use_context::<Signal<Chatlog>>();
     let log = active_chatlog.get_clone_untracked();
     let msgs = log.messages.get_clone_untracked();
-    
+
     let config_context_signal = use_context::<Signal<ApiEndpointConfig>>();
     let system_message_context = use_context::<SystemMessage>();
 
@@ -43,10 +45,18 @@ fn generate_response() {
 
                 // save the active chatlog into a separate local storage key so that
                 // current progress is always saved.
-                let chatlog_json = active_chatlog.get_clone_untracked().to_json(config_context_signal.get_clone(), system_message_context.signal().get_clone());
+                let chatlog_json = active_chatlog.get_clone_untracked().to_json(
+                    config_context_signal.get_clone(),
+                    system_message_context.signal().get_clone(),
+                );
                 if let Ok(json) = chatlog_json {
-                    if let Err(e) = storage::save_to_local_storage::<String>(LSKEY_CURRENTLOG, &json) {
-                        console_log!("ERROR: attempt to save_to_local_storage for current log failed: {:?}", e);
+                    if let Err(e) =
+                        storage::save_to_local_storage::<String>(LSKEY_CURRENTLOG, &json)
+                    {
+                        console_log!(
+                            "ERROR: attempt to save_to_local_storage for current log failed: {:?}",
+                            e
+                        );
                     }
                 } else {
                     console_log!("Failed to serialize the current chatlog to JSON.");
@@ -64,6 +74,23 @@ fn generate_response() {
 /// A component that renders the application.
 #[component]
 fn MainComponent() -> View {
+    // create a signal for the chatlog metadata and put it in the context
+    let metadata = storage::load_from_local_storage::<ChatLogMetadata>(LSKEY_CHATLOG_METADATA)
+        .unwrap_or_else(ChatLogMetadata::new);
+    let chatlog_metadata = create_signal(metadata);
+    provide_context(chatlog_metadata);
+
+    // add effect to save metadata on change
+    let chatlog_metadata_clone = chatlog_metadata.clone();
+    create_effect(move || {
+        let metadata = chatlog_metadata_clone.get_clone();
+        if let Err(e) =
+            storage::save_to_local_storage::<ChatLogMetadata>(LSKEY_CHATLOG_METADATA, &metadata)
+        {
+            console_log!("Failed to save chatlog metadata: {:?}", e);
+        }
+    });
+
     // create a signal for the chatlog and put it in the context
     let chatlog_json_maybe = storage::load_from_local_storage::<String>(LSKEY_CURRENTLOG);
     let active_chatlog = match chatlog_json_maybe {

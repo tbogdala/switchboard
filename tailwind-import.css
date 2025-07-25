@@ -212,7 +212,7 @@
 }
 
 .save-slot-button {
-  @apply rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm
+  @apply rounded-md px-3 py-2 text-sm font-semibold text-primary-text dark:text-primary-text-dark shadow-sm
     bg-msgbubble-ai dark:bg-msgbubble-ai-dark hover:bg-msgbubble-user dark:hover:bg-msgbubble-user-dark;
 }
 

@@ -3,6 +3,53 @@ use sycamore::prelude::*;
 
 use super::config::ApiEndpointConfig;
 
+const CHAT_LOG_METADATA_VERSION: u16 = 1;
+
+// Metadata for an individual saved chat logs
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ChatLogMetadataEntry {
+    pub id: String,              // guid
+    pub title: String,           // user-provided name for the chat log
+    pub last_accessed_time: i64, // when it was last accessed
+    pub storage_key: String,     // LocalStorage key where this chat log is stored
+    pub message_count: usize,    // number of messages in this chat log
+}
+
+impl Default for ChatLogMetadataEntry {
+    fn default() -> Self {
+        Self {
+            id: Default::default(),
+            title: Default::default(),
+            last_accessed_time: Default::default(),
+            storage_key: Default::default(),
+            message_count: Default::default(),
+        }
+    }
+}
+
+// Represents the metadata for all saved chat logs
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ChatLogMetadata {
+    pub version: u16,                          // Version of this metadata format
+    pub saved_logs: Vec<ChatLogMetadataEntry>, // List of all saved chat logs
+}
+
+impl Default for ChatLogMetadata {
+    fn default() -> Self {
+        Self {
+            version: CHAT_LOG_METADATA_VERSION,
+            saved_logs: Vec::new(),
+        }
+    }
+}
+
+impl ChatLogMetadata {
+    // creates a new metadata repository for chat logs
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
 // Convenience struct to handle JSON serialization of chatlog components.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 struct JSONChatlog {
