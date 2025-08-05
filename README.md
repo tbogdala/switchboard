@@ -9,9 +9,6 @@ you set in the configuration, the app makes no other connections.
 
 Note: Everything is under heavy development right now; Consider any data as disposable as log compatability isn't guaranteed yet.
 
-WARNING: CHATLOG BREAKS ARE INCOMING FOR THE NEXT FEW COMMITS. 
-(WILL STABILIZE AND UPDATE DEMO SITE ONCE I FEEL BETTER ABOUT THE UI FOR THE LOGS)
-
 ![Screenshot of Switchboard in action](assets/screenshot_main.png)
 
 
@@ -36,8 +33,7 @@ WARNING: CHATLOG BREAKS ARE INCOMING FOR THE NEXT FEW COMMITS.
   combined with [llama-swap](https://github.com/mostlygeek/llama-swap), will allow multiple models to be served.
   It also works with popular cloud API providers such as [openrouter](https://openrouter.ai/).
 
-* Save slots allow you to save your conversation in the web browser's storage, meaning no file management
-  is required. 
+* Save your conversations in the web browser's storage! No file management is required. 
 
 * Chatlogs can be imported and exported using JSON.
 

@@ -38,7 +38,7 @@ pub fn ChatInputComponent() -> View {
             let mut log = active_chatlog.get_clone();
 
             let image_data = image_data_base64.get_clone();
-            log.add_msg(input_str.clone(), false, image_data);
+            log.add_message(input_str.clone(), false, image_data);
             log.trigger_response_generation();
             active_chatlog.replace(log);
 

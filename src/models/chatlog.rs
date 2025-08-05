@@ -59,14 +59,45 @@ struct JSONChatlog {
     messages: Vec<Message>,
 }
 
+// Represents an individual chat message generation that encapsulates the
+// generated text and can be extended in the future.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct StackedMessage {
+    pub message: String,
+    pub image_base64: Option<String>, // optional base64 encoded image associated with message
+
+                                      // TODO: generation timing stats
+                                      // TODO: record API settings used
+}
+
 /// Represents an individual chat message; combines the message content with metadata
 /// about the message's origin (user or AI-generated) and a unique identifier.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Message {
-    pub message: String,
     pub ai_generated: bool,
     pub id: u32,
-    pub image_base64: Option<String>, // optional base64 encoded image associated with message
+
+    #[serde(default)]
+    pub message_stack: Vec<StackedMessage>, // all generated variants
+    #[serde(default)]
+    pub selected_message: usize, // index of the message in `message_stack` that is the 'chosen' one to be shown
+}
+
+impl Message {
+    // returns an possible reference to the 'selected' generated message in the
+    // message stack. if no messages exit or the `selected_message` index is not
+    // valid, `None` will be returned.
+    pub fn get_selected_message(&self) -> Option<StackedMessage> {
+        self.message_stack.get(self.selected_message).cloned()
+    }
+
+    // sets a currently existing stacked message to a new object. the function
+    // does nothing if the index is not found.
+    pub fn set_selected_message(&mut self, new_item: StackedMessage) {
+        if let Some(stacked_msg) = self.message_stack.get_mut(self.selected_message) {
+            *stacked_msg = new_item;
+        }
+    }
 }
 
 // extracts think block from message, returning a tuple that represents
@@ -93,18 +124,20 @@ pub fn parse_think_block(message: String) -> Option<(String, String)> {
 // Encapsulates all the data for a given 'chat log' in the application.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Chatlog {
-    pub next_id: u32,
+    pub next_id: Signal<u32>,
     pub messages: Signal<Vec<Message>>,
     pub response_generator: fn(),
+    pub is_regenerating_msg: Signal<bool>,
 }
 
 impl Chatlog {
     // creates a new `Chatlog` with a `messages` signal that has an empty vector.
     pub fn new(response_generator: fn()) -> Self {
         Self {
-            next_id: 1,
+            next_id: create_signal(1),
             messages: create_signal(vec![]),
             response_generator: response_generator,
+            is_regenerating_msg: create_signal(false),
         }
     }
 
@@ -124,9 +157,10 @@ impl Chatlog {
             .map_or(1, |max_id| max_id + 1);
         Ok((
             Self {
-                next_id,
+                next_id: create_signal(next_id),
                 messages: create_signal(json_log.messages),
                 response_generator,
+                is_regenerating_msg: create_signal(false),
             },
             json_log.api_settings,
             json_log.system_message,
@@ -163,16 +197,42 @@ impl Chatlog {
     // adds a new `Message` to the chatlog and generates a new id for it.
     // `ai_gen` should be set to `false` if this message was human generated.
     // `image_base64` is an optional base64 encoded string for an image.
-    pub fn add_msg(&mut self, new_msg: String, ai_gen: bool, image_base64: Option<String>) {
+    pub fn add_message(&mut self, new_msg: String, ai_gen: bool, image_base64: Option<String>) {
         self.messages.update(|msgs| {
             let new_id = self.get_next_id();
             msgs.push(Message {
                 id: new_id,
                 ai_generated: ai_gen,
-                message: new_msg,
-                image_base64,
+                message_stack: vec![StackedMessage {
+                    message: new_msg,
+                    image_base64,
+                }],
+                selected_message: 0,
             })
         });
+    }
+
+    // pushes a new StackedMessage to the message stack for the specified message ID
+    pub fn push_to_message_stack(&mut self, msg_id: u32, new_msg: String, image_base64: Option<String>) {
+        self.messages.update(|msgs| {
+            if let Some(msg) = msgs.iter_mut().find(|m| m.id == msg_id) {
+                msg.message_stack.push(StackedMessage {
+                    message: new_msg,
+                    image_base64,
+                });
+                msg.selected_message = msg.message_stack.len() - 1;
+            }
+        });
+    }
+
+    // gets the message in the chat log for a given id and returns it or
+    // `None` if the id isn't found.
+    pub fn get_message(&self, id: u32) -> Option<Message> {
+        if let Some(msg) = self.messages.get_clone().iter().find(|msg| msg.id == id) {
+            Some(msg.clone())
+        } else {
+            None
+        }
     }
 
     // removes the `Message` with the matching id *and* all `Message` objects that come after it.
@@ -202,14 +262,33 @@ impl Chatlog {
         });
     }
 
-    // updates the message text and image data for a `Message` with matching id.
+    // updates the message text and image data for the currently selected `StackedMessage` in
+    // the `Message` with a matching id.
     pub fn update_msg(&mut self, id: u32, new_msg: String, image_base64: Option<String>) {
         self.messages.update(|msgs| {
             if let Some(msg) = msgs.iter_mut().find(|msg| msg.id == id) {
-                msg.message = new_msg;
-                msg.image_base64 = image_base64;
+                msg.set_selected_message(StackedMessage {
+                    message: new_msg,
+                    image_base64: image_base64,
+                });
             }
         });
+    }
+
+    // updates the selected index, which represents the `StackedMessage` that should be presented
+    // to the user by default for this `Message`.
+    pub fn update_selected_index(&mut self, msg_id: u32, delta: i16) {
+        self.messages.update(|msgs| {
+            if let Some(m) = msgs.iter_mut().find(|m| m.id == msg_id) {
+                let len = m.message_stack.len();
+                if len == 0 {
+                    return;
+                }
+                let current = m.selected_message as i16;
+                let new_idx = (current + delta).clamp(0, len as i16 - 1) as usize;
+                m.selected_message = new_idx;
+            }
+        })
     }
 
     // call this to invoke a text generation request to create a `Message` response.
@@ -221,8 +300,8 @@ impl Chatlog {
 
     // internal helper function to generate the next id for messages.
     fn get_next_id(&mut self) -> u32 {
-        let id = self.next_id;
-        self.next_id += 1;
+        let id = self.next_id.get();
+        self.next_id.set(id +  1);
         id
     }
 }

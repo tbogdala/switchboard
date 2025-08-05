@@ -36,12 +36,24 @@ fn generate_response() {
     let config_context_signal = use_context::<Signal<ApiEndpointConfig>>();
     let system_message_context = use_context::<SystemMessage>();
 
-    api_endpoint::send_chat_completion_request(msgs, move |maybe_response| {
-        // console_log!("main::on_user_send response received: {:?}", response);
+    let is_regenerating = log.is_regenerating_msg.get_untracked();
+    let last_message_id = msgs.last().map(|m| m.id);
+
+    api_endpoint::send_chat_completion_request(msgs, is_regenerating, move |maybe_response| {
         is_response_pending.signal().set(false);
         match maybe_response {
             Ok(response) => {
-                active_chatlog.update(|log| log.add_msg(response.text, true, None));
+                //console_log!("main::on_user_send response received: {:?}", response_text);
+
+                let mut log = active_chatlog.get_clone();
+                if is_regenerating && last_message_id.is_some() {
+                    // if we are regenerating a message, then the completion gets added
+                    // to the existing message stack.
+                    log.push_to_message_stack(last_message_id.unwrap(), response.text, None);
+                    log.is_regenerating_msg.set(false);
+                } else {
+                    log.add_message(response.text, true, None);
+                }
 
                 // save the active chatlog into a separate local storage key so that
                 // current progress is always saved.
@@ -63,6 +75,13 @@ fn generate_response() {
                 }
             }
             Err(e) => {
+                // clear the regeneration flag on error too
+                if is_regenerating {
+                    active_chatlog.update(|log| {
+                        log.is_regenerating_msg.set(false);
+                    });
+                }
+
                 let _ = window().alert_with_message(
                     format!("ERROR: Failed to generate the AI's response:\n\n{}", e).as_str(),
                 );

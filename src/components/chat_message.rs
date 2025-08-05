@@ -12,14 +12,24 @@ use web_sys::KeyboardEvent;
 /// a blue background, while AI messages appear on the left side with a gray background.
 #[component(inline_props)]
 pub fn ChatMessageComponent(msg: Message) -> View {
+    // create a signal for the selected message index that will trigger re-renders
+    let selected_index = create_signal(msg.selected_message);
+
+    // grab the active message to render; should *always* be a valid reference, but
+    // we use a default message here for safety.
+    debug_assert!(msg.get_selected_message().is_some());
+    let active_msg = msg
+        .get_selected_message()
+        .unwrap();
+
+    let is_editing = create_signal(false);
+    let edited_message = create_signal(active_msg.message.clone());
+    let edited_image_base64 = create_signal(active_msg.image_base64.clone());
+
     let show_actions = create_signal(false);
     let toggle_actions = move |_| {
         show_actions.set(!show_actions.get());
     };
-
-    let is_editing = create_signal(false);
-    let edited_message = create_signal(msg.message.clone());
-    let edited_image_base64 = create_signal(msg.image_base64.clone());
 
     let handle_edit_done = move || {
         is_editing.set(false);
@@ -62,15 +72,9 @@ pub fn ChatMessageComponent(msg: Message) -> View {
     };
 
     let handle_regeneration = move || {
-        // the remove operation is 'silent' here because otherwise
-        // some behind-the-scenes stuff triggers and a call to
-        // `trigger_response_generation()` will cause a crash.
-        // Making it use `remove_message_silent()` has the unfortunate
-        // side effect of not updating the chatlog view until the
-        // new response comes in.
         let active_chatlog = use_context::<Signal<Chatlog>>();
         active_chatlog.update(|log| {
-            log.remove_message_silent(msg.id);
+            log.is_regenerating_msg.set(true);
         });
 
         let log = active_chatlog.get_clone();
@@ -80,6 +84,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
 
     // signal for tracking if think block is expanded, unexpanded by default
     let show_think_block = create_signal(false);
+    let stack_len = msg.message_stack.len();
 
     view! {
     div (class = if !msg.ai_generated {
@@ -199,6 +204,9 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                                 handle_delete_msg();
                             }
                         ) { "Delete" }
+
+                        span(class="action-separator") { "|" }
+
                         button(
                             class="action-button",
                             on:click=move |_| {
@@ -211,6 +219,47 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                                 handle_regeneration();
                             }
                         ) { "Regenerate" }
+
+                        (if stack_len > 1 {
+                            view! {
+                                span(class="action-separator") { "|" }
+                                button(
+                                    class="action-button",                                    
+                                    on:click=move |_| {
+                                        let active_chatlog = use_context::<Signal<Chatlog>>();
+                                        active_chatlog.get_clone().update_selected_index(msg.id, -1);
+                                        active_chatlog.update(|log| {
+                                            if let Some(msg) = log.get_message(msg.id) {
+                                                let selected_msg = msg.get_selected_message().unwrap();
+                                                edited_message.set(selected_msg.message);
+                                                edited_image_base64.set(selected_msg.image_base64);
+                                            }
+                                        });
+                                        selected_index.set(selected_index.get().saturating_sub(1));
+                                    },
+                                ) { "Prev" }
+
+                                p { (format!("{}/{}", selected_index.clone().get() + 1, stack_len)) }
+
+                                button(
+                                    class="action-button",
+                                    on:click=move |_| {
+                                        let active_chatlog = use_context::<Signal<Chatlog>>();
+                                        active_chatlog.get_clone().update_selected_index(msg.id, 1);
+                                        active_chatlog.update(|log| {
+                                            if let Some(msg) = log.get_message(msg.id) {
+                                                let selected_msg = msg.get_selected_message().unwrap();
+                                                edited_message.set(selected_msg.message);
+                                                edited_image_base64.set(selected_msg.image_base64);                                            }
+                                        });
+                                        selected_index.set((selected_index.get() + 1).min(stack_len - 1));
+                                    },
+                                ) { "Next" }
+                            }
+                        } else {
+                            view! {}
+                        })
+
                     }
                 }
             }

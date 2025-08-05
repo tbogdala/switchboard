@@ -95,9 +95,7 @@ fn load_chatlog(key: &str, entry_title: &str, entry_id: &str) {
         Ok((new_log, new_api, new_sysmsg)) => {
             use_context::<Signal<ApiEndpointConfig>>().set(new_api);
             use_context::<SystemMessage>().signal().set(new_sysmsg);
-
             use_context::<Signal<Chatlog>>().update(|log| log.clone_from(&new_log));
-
             use_context::<Signal<ChatLogMetadata>>().update(|meta| {
                 if let Some(entry) = meta.saved_logs.iter_mut().find(|e| e.id == entry_id) {
                     entry.message_count = new_log.messages.get_clone().len();

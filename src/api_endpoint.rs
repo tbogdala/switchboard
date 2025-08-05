@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 use sycamore::prelude::*;
 
 use crate::models::{
-    chatlog::{Message, parse_think_block},
+    chatlog::{parse_think_block, Message, StackedMessage},
     config::ApiEndpointConfig,
     system_message::SystemMessage,
 };
@@ -33,7 +33,7 @@ pub struct CompletionResponse {
 }
 
 /// Sends a chat request to the API with the given messages and handles the response.
-pub fn send_chat_completion_request<F>(msgs: Vec<Message>, on_response: F)
+pub fn send_chat_completion_request<F>(msgs: Vec<Message>, is_regenerating: bool, on_response: F)
 where
     F: FnOnce(anyhow::Result<CompletionResponse>) + 'static,
 {
@@ -61,13 +61,26 @@ where
     working_token_budget -= estimate_tokens(system_message_trimmed);
 
     // construct the message history list
+    let mut regen_skip = is_regenerating;
     let mut first_message = true;
     for m in msgs.iter().rev() {
+        // before the `first_message` skip, we take out the most recent message
+        // if we're regenerating it.
+        if regen_skip {
+            regen_skip = false;
+            continue;
+        }
+
         // we need to remove the thinking content when sending in messages as this
         // is currently considered best practice.
-        let content = match parse_think_block(m.message.clone()) {
+        let current_message = m.get_selected_message().unwrap_or_else(|| {
+            debug_assert!(false, "get_selected_message() returned None in a context it should have one.");
+            StackedMessage::default()
+        });
+
+        let content = match parse_think_block(current_message.message.clone()) {
             Some((main_content, _)) => main_content,
-            None => m.message.clone(),
+            None => current_message.message.clone(),
         };
         let msg_token_est = estimate_tokens(&content);
         if msg_token_est <= working_token_budget {
@@ -77,7 +90,7 @@ where
             // if the image data is present, then we have to encode our JSON
             // request object differently to pair the message with the image.
             if first_message {
-                if let Some(image_base64) = &m.image_base64 {
+                if let Some(image_base64) = &current_message.image_base64 {
                     messages.push(json!({
                         "role": "user",
                         "content": [
@@ -124,7 +137,7 @@ where
         );
     }
 
-    // Debug writing out the messages cchosen for the prompt.
+    // Debug writing out the messages chosen for the prompt.
     // for m in messages.iter() {
     //     console_log!("Message: {:?}", m);
     // }
@@ -159,7 +172,7 @@ where
     if api_config.repetition_penalty.is_some() {
         request_body["repetition_penalty"] = json!(api_config.get_repetition_penalty());
     }
-    //console_log!("DEBUG: request body: {}", request_body);
+    console_log!("DEBUG: request body: {}", request_body);
 
     // make a POST request to the API
     wasm_bindgen_futures::spawn_local(async move {
