@@ -172,7 +172,7 @@ where
     if api_config.repetition_penalty.is_some() {
         request_body["repetition_penalty"] = json!(api_config.get_repetition_penalty());
     }
-    console_log!("DEBUG: request body: {}", request_body);
+    //console_log!("DEBUG: request body: {}", request_body);
 
     // make a POST request to the API
     wasm_bindgen_futures::spawn_local(async move {

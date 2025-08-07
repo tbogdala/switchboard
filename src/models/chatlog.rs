@@ -122,6 +122,7 @@ pub fn parse_think_block(message: String) -> Option<(String, String)> {
 }
 
 // Encapsulates all the data for a given 'chat log' in the application.
+// Note: Remember to update `clone_from()` when adding more signals.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Chatlog {
     pub next_id: Signal<u32>,
@@ -183,8 +184,9 @@ impl Chatlog {
     }
 
     pub fn clone_from(&mut self, other: &Self) {
-        self.next_id = other.next_id;
-        self.messages.set(other.messages.get_clone());
+        self.next_id.set(other.next_id.get_clone_untracked());
+        self.messages.set(other.messages.get_clone_untracked());
+        self.is_regenerating_msg.set(other.is_regenerating_msg.get_clone_untracked());
         self.response_generator = other.response_generator;
     }
 
