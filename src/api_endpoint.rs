@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 use sycamore::prelude::*;
 
 use crate::models::{
-    chatlog::{parse_think_block, Message, StackedMessage},
+    chatlog::{Message, StackedMessage, parse_think_block},
     config::ApiEndpointConfig,
     system_message::SystemMessage,
 };
@@ -74,7 +74,10 @@ where
         // we need to remove the thinking content when sending in messages as this
         // is currently considered best practice.
         let current_message = m.get_selected_message().unwrap_or_else(|| {
-            debug_assert!(false, "get_selected_message() returned None in a context it should have one.");
+            debug_assert!(
+                false,
+                "get_selected_message() returned None in a context it should have one."
+            );
             StackedMessage::default()
         });
 

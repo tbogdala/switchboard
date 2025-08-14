@@ -186,7 +186,8 @@ impl Chatlog {
     pub fn clone_from(&mut self, other: &Self) {
         self.next_id.set(other.next_id.get_clone_untracked());
         self.messages.set(other.messages.get_clone_untracked());
-        self.is_regenerating_msg.set(other.is_regenerating_msg.get_clone_untracked());
+        self.is_regenerating_msg
+            .set(other.is_regenerating_msg.get_clone_untracked());
         self.response_generator = other.response_generator;
     }
 
@@ -199,13 +200,13 @@ impl Chatlog {
     pub fn track_message(&self, msg_id: u32) -> Signal<Option<Message>> {
         let signal = create_signal(None);
         let messages_signal = self.messages;
-        
+
         create_effect(move || {
             let messages = messages_signal.get_clone();
             let msg = messages.iter().find(|m| m.id == msg_id).cloned();
             signal.set(msg);
         });
-        
+
         signal
     }
 
@@ -228,7 +229,12 @@ impl Chatlog {
     }
 
     // pushes a new StackedMessage to the message stack for the specified message ID
-    pub fn push_to_message_stack(&mut self, msg_id: u32, new_msg: String, image_base64: Option<String>) {
+    pub fn push_to_message_stack(
+        &mut self,
+        msg_id: u32,
+        new_msg: String,
+        image_base64: Option<String>,
+    ) {
         self.messages.update(|msgs| {
             if let Some(msg) = msgs.iter_mut().find(|m| m.id == msg_id) {
                 msg.message_stack.push(StackedMessage {
@@ -316,7 +322,7 @@ impl Chatlog {
     // internal helper function to generate the next id for messages.
     fn get_next_id(&mut self) -> u32 {
         let id = self.next_id.get();
-        self.next_id.set(id +  1);
+        self.next_id.set(id + 1);
         id
     }
 }

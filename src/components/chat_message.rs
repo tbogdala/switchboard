@@ -37,7 +37,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
     // grab the active message to render; should *always* be a valid reference, but
     // we use a default message here for safety.
     debug_assert!(msg.get_selected_message().is_some());
-    
+
     let is_editing = create_signal(false);
     let show_actions = create_signal(false);
     let toggle_actions = move |_| {
@@ -233,7 +233,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                             view! {
                                 span(class="action-separator") { "|" }
                                 button(
-                                    class="action-button",                                    
+                                    class="action-button",
                                     on:click=move |_| {
                                         let active_chatlog = use_context::<Signal<Chatlog>>();
                                         active_chatlog.get_clone().update_selected_index(msg.id, -1);
