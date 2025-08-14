@@ -12,20 +12,33 @@ use web_sys::KeyboardEvent;
 /// a blue background, while AI messages appear on the left side with a gray background.
 #[component(inline_props)]
 pub fn ChatMessageComponent(msg: Message) -> View {
-    // create a signal for the selected message index that will trigger re-renders
+    // get the chatlog context to track changes
+    let chatlog = use_context::<Signal<Chatlog>>();
+    let tracked_message = chatlog.get_clone_untracked().track_message(msg.id);
+    let msg_content = create_signal(String::new());
+    let msg_image = create_signal(None::<String>);
     let selected_index = create_signal(msg.selected_message);
+    let stack_len = create_signal(msg.message_stack.len());
+
+    // signal for tracking if think block is expanded, unexpanded by default
+    let show_think_block = create_signal(false);
+
+    create_effect(move || {
+        if let Some(current_msg) = tracked_message.get_clone() {
+            if let Some(selected) = current_msg.get_selected_message() {
+                msg_content.set(selected.message.clone());
+                msg_image.set(selected.image_base64.clone());
+                selected_index.set(current_msg.selected_message);
+            }
+            stack_len.set(current_msg.message_stack.len());
+        }
+    });
 
     // grab the active message to render; should *always* be a valid reference, but
     // we use a default message here for safety.
     debug_assert!(msg.get_selected_message().is_some());
-    let active_msg = msg
-        .get_selected_message()
-        .unwrap();
-
+    
     let is_editing = create_signal(false);
-    let edited_message = create_signal(active_msg.message.clone());
-    let edited_image_base64 = create_signal(active_msg.image_base64.clone());
-
     let show_actions = create_signal(false);
     let toggle_actions = move |_| {
         show_actions.set(!show_actions.get());
@@ -34,18 +47,18 @@ pub fn ChatMessageComponent(msg: Message) -> View {
     let handle_edit_done = move || {
         is_editing.set(false);
 
-        let new_msg = edited_message.get_clone_untracked();
+        let new_msg = msg_content.get_clone_untracked();
         if !new_msg.trim().is_empty() {
             let mut active_chatlog = use_context::<Signal<Chatlog>>().get_clone_untracked();
-            active_chatlog.update_msg(msg.id, new_msg, edited_image_base64.get_clone());
+            active_chatlog.update_msg(msg.id, new_msg, msg_image.get_clone());
             show_actions.set(false);
         }
     };
 
     let handle_remove_image = move || {
-        edited_image_base64.set(None);
+        msg_image.set(None);
         let mut active_chatlog = use_context::<Signal<Chatlog>>().get_clone_untracked();
-        active_chatlog.update_msg(msg.id, edited_message.get_clone(), None);
+        active_chatlog.update_msg(msg.id, msg_content.get_clone(), None);
     };
 
     let handle_purge_msgs = move || {
@@ -82,10 +95,6 @@ pub fn ChatMessageComponent(msg: Message) -> View {
         show_actions.set(false);
     };
 
-    // signal for tracking if think block is expanded, unexpanded by default
-    let show_think_block = create_signal(false);
-    let stack_len = msg.message_stack.len();
-
     view! {
     div (class = if !msg.ai_generated {
         "message-container-user"
@@ -102,7 +111,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                 (if !is_editing.get() {
                     // Check for think block by setting up a msg clone with the edited content
                     // from the signal
-                    let maybe_msg_has_thoughts = parse_think_block(edited_message.get_clone());
+                    let maybe_msg_has_thoughts = parse_think_block(msg_content.get_clone());
 
                     if let Some((main_content, think_content)) = maybe_msg_has_thoughts.clone() {
                         let markdown_content = ammonia::clean(&markdown::to_html(&main_content));
@@ -124,7 +133,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                             }
                         }
                     } else {
-                        let markdown_content = ammonia::clean(&markdown::to_html(edited_message.get_clone().as_str()));
+                        let markdown_content = ammonia::clean(&markdown::to_html(msg_content.get_clone().as_str()));
 
                         view! {
                             div(dangerously_set_inner_html=markdown_content)
@@ -135,7 +144,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                         textarea(
                             rows = "5",
                             class = "message-content-editable block",
-                            bind:value = edited_message,
+                            bind:value = msg_content,
                             on:blur = move |_| {
                                 handle_edit_done();
                             },
@@ -151,7 +160,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                     }
                 })
 
-                (if let Some(data_url_str) = edited_image_base64.get_clone() {
+                (if let Some(data_url_str) = msg_image.get_clone() {
                     if !is_editing.get() {
                         view! {
                             div {
@@ -220,7 +229,7 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                             }
                         ) { "Regenerate" }
 
-                        (if stack_len > 1 {
+                        (if stack_len.get() > 1 {
                             view! {
                                 span(class="action-separator") { "|" }
                                 button(
@@ -231,15 +240,15 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                                         active_chatlog.update(|log| {
                                             if let Some(msg) = log.get_message(msg.id) {
                                                 let selected_msg = msg.get_selected_message().unwrap();
-                                                edited_message.set(selected_msg.message);
-                                                edited_image_base64.set(selected_msg.image_base64);
+                                                msg_content.set(selected_msg.message);
+                                                msg_image.set(selected_msg.image_base64);
                                             }
                                         });
                                         selected_index.set(selected_index.get().saturating_sub(1));
                                     },
                                 ) { "Prev" }
 
-                                p { (format!("{}/{}", selected_index.clone().get() + 1, stack_len)) }
+                                p { (format!("{}/{}", selected_index.clone().get() + 1, stack_len.get())) }
 
                                 button(
                                     class="action-button",
@@ -249,10 +258,10 @@ pub fn ChatMessageComponent(msg: Message) -> View {
                                         active_chatlog.update(|log| {
                                             if let Some(msg) = log.get_message(msg.id) {
                                                 let selected_msg = msg.get_selected_message().unwrap();
-                                                edited_message.set(selected_msg.message);
-                                                edited_image_base64.set(selected_msg.image_base64);                                            }
+                                                msg_content.set(selected_msg.message);
+                                                msg_image.set(selected_msg.image_base64);                                            }
                                         });
-                                        selected_index.set((selected_index.get() + 1).min(stack_len - 1));
+                                        selected_index.set((selected_index.get() + 1).min(stack_len.get() - 1));
                                     },
                                 ) { "Next" }
                             }

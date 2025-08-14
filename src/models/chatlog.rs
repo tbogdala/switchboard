@@ -196,6 +196,19 @@ impl Chatlog {
         return self.messages;
     }
 
+    pub fn track_message(&self, msg_id: u32) -> Signal<Option<Message>> {
+        let signal = create_signal(None);
+        let messages_signal = self.messages;
+        
+        create_effect(move || {
+            let messages = messages_signal.get_clone();
+            let msg = messages.iter().find(|m| m.id == msg_id).cloned();
+            signal.set(msg);
+        });
+        
+        signal
+    }
+
     // adds a new `Message` to the chatlog and generates a new id for it.
     // `ai_gen` should be set to `false` if this message was human generated.
     // `image_base64` is an optional base64 encoded string for an image.
