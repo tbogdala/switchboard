@@ -123,7 +123,7 @@ pub fn parse_think_block(message: String) -> Option<(String, String)> {
 
 // Encapsulates all the data for a given 'chat log' in the application.
 // Note: Remember to update `clone_from()` when adding more signals.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Chatlog {
     pub next_id: Signal<u32>,
     pub messages: Signal<Vec<Message>>,
